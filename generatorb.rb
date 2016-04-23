@@ -5,26 +5,14 @@ require 'ostruct'
 #process the expression in the square brackets,
 #returning the length of the expression or -1
 #if invalid
+#TODO cowards way out
 def process_bracket_expression(regex, quantity)
-  int len = 0
+  len = regex.length
   
-  #check if range
-  while len <= regex.length && regex[len] != ']'
-    if regex[len] != '-' and regex[len + 1] == '-' and regex[len + 2] != ']'
-      if regex[len].ord < regex[len + 2].ord
-        add_sequence(regex[len]..regex[len + 2]).to_a.join
-        len += 3
-      else
-        len = -1
-        break
-      end
-    else        
-      if operator_length(regex[len]) == 2
-        process_metacharacter(metacharacter, quantity, codes)
-      else
-        add_single(regex[len])
-      end
-    end
+  #check if a range
+  if len == 3
+  else
+    return regex
   end
   
   return len
@@ -161,20 +149,8 @@ end
 
 #Need to evaluate codes which come under the desired amount
 def add_permutations()
-      puts @regex_map[-1][:character_set]
 	  
-	  # If there are codes, increment based on the previous permutation
-	  # Check from the last character to the first to see that it has reached the last element in the sequence
-	  permutation_index = 0
-	  map_element = 0
-      total_possibilities = 1
-	  
-	  #get the number of possibilities within each map n^r
-	  while map_element < @regex_map.length
-	    total_possibilities *= (@regex_map[map_element][:character_set].length * @regex_map[map_element][:quantifier])
-		map_element += 1
-	  end
-	  
+	  #get the first permutation
 	  current_index = 0
 	  first_permutation = ''
 	  # create the first permutation
@@ -189,6 +165,7 @@ def add_permutations()
 	  
 	  @codes << first_permutation
 
+	  #get the last permutation
 	  current_index = 0
 	  final_permutation = ''
 	  #create the last permutation
@@ -201,29 +178,21 @@ def add_permutations()
 		current_index += 1
 	  end
 	  
-	  current_index = 0
-	  while current_index < @regex_map.length
-	    current_q = 0
-		while current_q < @regex_map[current_index][:quantifier]
-		  puts @regex_map[current_q][:character_set]
-		  current_q += 1
-		end
-		current_index += 1
-	  end
-	  
-	  #while the current permutation is not equal to the final permutation
-	  current_permutation = @codes[0]
+	  #while the current permutation is not equal to the final permutation, increment
+	  current_permutation = String.new(@codes[0])
+	  puts current_permutation 
 	  
 	  while current_permutation != final_permutation
 		current_permutation = increment(current_permutation)
-		@codes << current_permutation
+		@codes << String.new(current_permutation)
 	  end
+	  
+	  p @codes
     
 end
 
 def add_segment(character_set,quantifier)
-  #Only add the main component, not *ed by the quantifier, we check this against the regex
-  @regex_map << {character_set: character_set, quantifier: quantifier}
+    @regex_map << {character_set: character_set, quantifier: quantifier}
 end
 
 def parse_structure(regex)
@@ -240,9 +209,10 @@ def parse_structure(regex)
     when '[' 
       #find the position of the next ] and get step, if no ], invalid
       close_bracket = regex[x..regex.length].index(']')
-      quantity = get_quantifier_value(regex, close_bracket)
+      quantifier_data = parse_quantifier_structure(regex, close_bracket+1)
       if ! close_bracket.nil?
-        step = process_bracket_expression(regex[x+1..y-1], quantity)
+        character_set = process_bracket_expression(regex[x+1..close_bracket-1])
+		add_segment(character_set, quantifier_data[:quantity])
       else
         structure_valid = 1
         break
